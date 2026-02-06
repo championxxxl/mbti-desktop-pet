@@ -224,9 +224,6 @@ class PetWidget(QWidget):
             # Clear input field immediately after displaying
             self.input_field.clear()
             
-            # Process the message using Qt's event processing
-            QApplication.processEvents()
-            
             # Recognize intent using the context-aware intent system
             intent = self.intent_system.analyze(user_input=user_input)
             
