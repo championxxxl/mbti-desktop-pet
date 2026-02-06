@@ -109,6 +109,8 @@
 
 | 文档 | 用途 |
 |-----|------|
+| [现在该做什么？](./现在该做什么.md) | 🎯 任务快速指南 ⭐ 新！ |
+| [TODO.md](./TODO.md) | 📋 详细任务清单 ⭐ 新！ |
 | [当前进度.md](./当前进度.md) | 📌 中文详细进度 |
 | [PROJECT_STATUS.md](./PROJECT_STATUS.md) | 📊 完整状态报告 |
 | [ROADMAP.md](./ROADMAP.md) | 🗺️ 开发路线图 |
@@ -142,6 +144,9 @@ python src/mbti_pet/main.py
 2. 🔴 UI界面设计和实现
 3. 🟡 编写单元测试
 4. 🟢 文档翻译和改进
+
+### 不知道做什么？
+👉 查看 [现在该做什么？](./现在该做什么.md) 获取具体任务建议！
 
 ### 提交方式:
 - 报告问题: [GitHub Issues](https://github.com/championxxxl/mbti-desktop-pet/issues)
