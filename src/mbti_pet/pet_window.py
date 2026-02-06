@@ -40,6 +40,7 @@ class PetWindow(QWidget):
         # Drag state
         self.dragging = False
         self.drag_offset = QPoint()
+        self.drag_start_pos = QPoint()
         
         # Animation components
         self.movie = None
@@ -127,8 +128,9 @@ class PetWindow(QWidget):
     def mousePressEvent(self, event):
         """Handle mouse press for dragging and clicking"""
         if event.button() == Qt.LeftButton:
-            # Start dragging
-            self.dragging = True
+            # Start potential drag
+            self.dragging = False  # Will be set to True if mouse moves
+            self.drag_start_pos = event.pos()
             self.drag_offset = event.pos()
             self.setCursor(Qt.ClosedHandCursor)
         elif event.button() == Qt.RightButton:
@@ -137,21 +139,23 @@ class PetWindow(QWidget):
     
     def mouseMoveEvent(self, event):
         """Handle mouse move for dragging"""
-        if self.dragging:
+        if event.buttons() & Qt.LeftButton:
+            # Mark as dragging on first movement
+            self.dragging = True
             # Move window
             self.move(self.mapToGlobal(event.pos() - self.drag_offset))
     
     def mouseReleaseEvent(self, event):
         """Handle mouse release after dragging"""
         if event.button() == Qt.LeftButton:
+            self.setCursor(Qt.OpenHandCursor)
+            
             if self.dragging:
+                # Was dragging - save position
                 self.dragging = False
-                self.setCursor(Qt.OpenHandCursor)
-                
-                # Save position after dragging
                 self.save_position()
             else:
-                # Click without drag - show chat window
+                # Was a click without drag - show chat window
                 self.show_chat_window()
     
     def mouseDoubleClickEvent(self, event):

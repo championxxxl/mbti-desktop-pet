@@ -5,6 +5,7 @@ Screenshot test script - Creates screenshots of the UI components
 
 import sys
 import os
+import tempfile
 from pathlib import Path
 
 # Set headless mode but allow screenshots
@@ -30,15 +31,19 @@ def take_screenshot(widget, filename):
 def main():
     app = QApplication(sys.argv)
     
-    # Create temp config
-    config_manager = ConfigManager("/tmp/test_config.json")
+    # Create temp config using cross-platform temp directory
+    temp_dir = Path(tempfile.gettempdir())
+    config_path = temp_dir / "test_config.json"
+    config_manager = ConfigManager(str(config_path))
     
     # Screenshot 1: MBTI Selection Dialog
     print("Creating MBTI Selection Dialog screenshot...")
     dialog = MBTISelectDialog(config_manager)
     dialog.show()
+    
+    screenshot_path = temp_dir / "mbti_select_dialog.png"
     QTimer.singleShot(500, lambda: [
-        take_screenshot(dialog, "/tmp/mbti_select_dialog.png"),
+        take_screenshot(dialog, str(screenshot_path)),
         dialog.close()
     ])
     
@@ -47,8 +52,10 @@ def main():
         print("Creating Pet Window screenshot...")
         pet = PetWindow("ENFP", config_manager)
         pet.show()
+        
+        pet_screenshot_path = temp_dir / "pet_window.png"
         QTimer.singleShot(500, lambda: [
-            take_screenshot(pet, "/tmp/pet_window.png"),
+            take_screenshot(pet, str(pet_screenshot_path)),
             pet.close(),
             app.quit()
         ])
@@ -57,7 +64,7 @@ def main():
     
     app.exec_()
     print("\nScreenshots created successfully!")
-    print("Check /tmp/mbti_select_dialog.png and /tmp/pet_window.png")
+    print(f"Check {temp_dir}/mbti_select_dialog.png and {temp_dir}/pet_window.png")
 
 if __name__ == "__main__":
     main()
