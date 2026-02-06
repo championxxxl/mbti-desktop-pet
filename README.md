@@ -6,6 +6,9 @@
 
 An intelligent desktop pet assistant based on MBTI personality theory with user intent recognition, memory learning, and automation capabilities.
 
+> 📍 **项目状态 / Project Status**: v0.1.0-alpha | 68% 完成 | 🟡 活跃开发中  
+> 📚 **快速了解**: [当前进度](./当前进度.md) | [Quick Reference](./QUICK_REFERENCE.md) | [Roadmap](./ROADMAP.md) | [Full Status](./PROJECT_STATUS.md)
+
 ## ✨ 核心功能 Core Features
 
 ### 1. 🎭 MBTI人格化陪伴 (MBTI Personality-based Companionship)
