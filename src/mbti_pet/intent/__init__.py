@@ -119,7 +119,8 @@ class IntentRecognizer:
             (r'\b(search for|find me|lookup)\b', 0.7),
             (r'^(搜索|查询|搜|找)', 0.8),
             (r'(搜索|查找|检索).*(教程|资料|信息|内容)', 0.8),
-            (r'(search|搜索|搜|查找).{1,30}(tutorial|guide|info|how to|教程|指南|方法)', 0.8),
+            (r'(search).{1,20}(tutorial|guide|info|how to)', 0.8),  # English only, limited range
+            (r'(搜索|搜|查找).{1,20}(教程|指南|方法)', 0.8),  # Chinese only, limited range
         ],
         IntentType.AUTOMATION: [
             (r'^(automate|自动化)', 0.9),
@@ -158,7 +159,8 @@ class IntentRecognizer:
         IntentType.OPEN_FILE: [
             (r'\b(open|edit|view)\b.*\b(file|document)\b', 0.8),
             (r'(打开|编辑|查看).*(文件|文档)', 0.8),
-            (r'\b(open|edit|view|打开)\b.*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),
+            (r'\b(open|edit|view)\b.*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),
+            (r'(打开).*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),  # Chinese separately
             (r'"[^"]*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)"', 0.9),
             (r"'[^']*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)'", 0.9),
         ],

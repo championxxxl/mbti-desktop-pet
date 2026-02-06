@@ -316,12 +316,15 @@ def test_edge_cases():
     """Test edge cases and boundary conditions"""
     recognizer = IntentRecognizer()
     
+    # Constants for test inputs
+    LONG_INPUT_REPEAT_COUNT = 100
+    
     # Empty string
     intent = recognizer.recognize_intent("")
     assert intent.intent_type == IntentType.CASUAL_CHAT
     
     # Very long input
-    long_input = "help me " * 100
+    long_input = "help me " * LONG_INPUT_REPEAT_COUNT
     intent = recognizer.recognize_intent(long_input)
     assert intent.intent_type == IntentType.HELP_REQUEST
     
