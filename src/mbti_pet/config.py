@@ -3,7 +3,9 @@ Configuration management for MBTI Desktop Pet
 """
 
 import os
-from typing import Dict, Any
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
@@ -70,6 +72,137 @@ class PetConfig:
             "automation_enabled": self.automation_enabled,
             "auto_suggest_enabled": self.auto_suggest_enabled,
         }
+
+
+class ConfigManager:
+    """Manager for persistent configuration using JSON files"""
+    
+    DEFAULT_CONFIG_PATH = "./data/config.json"
+    
+    def __init__(self, config_path: Optional[str] = None):
+        """
+        Initialize configuration manager
+        
+        Args:
+            config_path: Path to configuration file (default: ./data/config.json)
+        """
+        self.config_path = Path(config_path or self.DEFAULT_CONFIG_PATH)
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    def load(self) -> Dict[str, Any]:
+        """
+        Load configuration from JSON file
+        
+        Returns:
+            Dictionary containing configuration data, or empty dict if file doesn't exist
+        """
+        if not self.config_path.exists():
+            return {}
+        
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Warning: Could not load config from {self.config_path}: {e}")
+            return {}
+    
+    def save(self, config: Dict[str, Any]) -> bool:
+        """
+        Save configuration to JSON file
+        
+        Args:
+            config: Configuration dictionary to save
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with open(self.config_path, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            return True
+        except IOError as e:
+            print(f"Error: Could not save config to {self.config_path}: {e}")
+            return False
+    
+    def get_mbti_type(self) -> Optional[str]:
+        """
+        Get saved MBTI type from configuration
+        
+        Returns:
+            MBTI type string or None if not set
+        """
+        config = self.load()
+        return config.get("mbti_type")
+    
+    def set_mbti_type(self, mbti_type: str) -> bool:
+        """
+        Save MBTI type to configuration
+        
+        Args:
+            mbti_type: MBTI type string (e.g., "ENFP", "INTJ")
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        config = self.load()
+        config["mbti_type"] = mbti_type
+        return self.save(config)
+    
+    def get_window_position(self) -> Optional[Tuple[int, int]]:
+        """
+        Get saved window position
+        
+        Returns:
+            Tuple of (x, y) coordinates or None if not set
+        """
+        config = self.load()
+        pos = config.get("window_position")
+        if pos and isinstance(pos, list) and len(pos) == 2:
+            return tuple(pos)
+        return None
+    
+    def set_window_position(self, x: int, y: int) -> bool:
+        """
+        Save window position to configuration
+        
+        Args:
+            x: X coordinate
+            y: Y coordinate
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        config = self.load()
+        config["window_position"] = [x, y]
+        return self.save(config)
+    
+    def get_window_size(self) -> Optional[Tuple[int, int]]:
+        """
+        Get saved window size
+        
+        Returns:
+            Tuple of (width, height) or None if not set
+        """
+        config = self.load()
+        size = config.get("window_size")
+        if size and isinstance(size, list) and len(size) == 2:
+            return tuple(size)
+        return None
+    
+    def set_window_size(self, width: int, height: int) -> bool:
+        """
+        Save window size to configuration
+        
+        Args:
+            width: Window width
+            height: Window height
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        config = self.load()
+        config["window_size"] = [width, height]
+        return self.save(config)
 
 
 # Global configuration instance
