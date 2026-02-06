@@ -156,7 +156,7 @@ class IntentRecognizer:
         IntentType.OPEN_FILE: [
             (r'\b(open|edit|view)\b.*\b(file|document)\b', 0.8),
             (r'(打开|编辑|查看).*(文件|文档)', 0.8),
-            (r'\b(open|打开)\b.*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),
+            (r'\b(open|edit|view|打开)\b.*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),
             (r'"[^"]*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)"', 0.9),
             (r"'[^']*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)'", 0.9),
         ],
