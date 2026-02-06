@@ -59,8 +59,9 @@ class IntentRecognizer:
         ],
         IntentType.TASK_EXECUTION: [
             (r'\b(execute|perform|carry out)\b.*\b(task|action|job)\b', 0.7),
-            (r'\b(do|run|start|launch)\b', 0.4),
-            (r'(完成|执行|运行|启动)', 0.5),
+            (r'\b(do|run|start|launch)\b', 0.4),  # Removed 'open' to avoid conflict with line below
+            (r'\b(open|close).*\b(browser|application|app|program|window)\b', 0.7),  # Specific pattern for opening/closing apps
+            (r'(完成|执行|运行|启动|打开)', 0.5),
             (r'^(please |帮我 )?(do|execute|run)', 0.6),
             (r'^(完成|执行)', 0.6),
         ],
@@ -74,6 +75,7 @@ class IntentRecognizer:
         IntentType.AUTOMATION_REQUEST: [
             (r'\b(automate|automatic|automatically)\b', 0.7),
             (r'\b(schedule|repeat|batch|recurring)\b', 0.6),
+            (r'\b(set up|setup).*\b(automation|automatic)\b', 0.8),  # "Set up automation"
             (r'(自动化|自动|定时|批量)', 0.7),
             (r'(重复|循环|定期)', 0.5),
             (r'(every|每|每天|每周|daily|weekly)', 0.6),
@@ -87,6 +89,7 @@ class IntentRecognizer:
         IntentType.WEB_SEARCH: [
             (r'\b(google|bing|search engine)\b', 0.7),
             (r'\b(find online|look up online|search the web)\b', 0.7),
+            (r'\b(look up|lookup)\b', 0.6),  # "Look up machine learning"
             (r'\b(browse|surf)\b', 0.4),
             (r'(在线搜索|网上查找|上网搜)', 0.7),
         ],
