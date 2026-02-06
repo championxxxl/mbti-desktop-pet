@@ -11,15 +11,10 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QTextEdit, QLineEdit, QPushButton, QLabel, QComboBox,
     QSystemTrayIcon, QMenu, QAction, QListWidget, QListWidgetItem,
-    QScrollArea
+    QScrollArea, QDialog, QDialogButtonBox, QMessageBox
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
-from PyQt5.QtGui import QIcon, QFont, QTextCursor
-    QSystemTrayIcon, QMenu, QAction, QDialog, QListWidget,
-    QDialogButtonBox, QMessageBox, QListWidgetItem
-)
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QIcon, QFont, QPixmap
+from PyQt5.QtGui import QIcon, QFont, QTextCursor, QPixmap
 
 from mbti_pet.personality import MBTIPersonality, MBTIType
 from mbti_pet.intent import ContextAwareIntentSystem
