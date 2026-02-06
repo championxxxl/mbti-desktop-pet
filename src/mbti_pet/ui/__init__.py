@@ -31,6 +31,9 @@ class PetWidget(QWidget):
         self.memory = MemoryManager()
         self.automation = AutomationAssistant()
         
+        # Sending state management
+        self.is_sending = False
+        
         self.init_ui()
         
     def init_ui(self):
@@ -75,12 +78,17 @@ class PetWidget(QWidget):
         
         # Input area
         input_layout = QHBoxLayout()
+        
+        # Input field with Enter key binding
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Type your message here...")
+        # Connect Enter key to send message
         self.input_field.returnPressed.connect(self.send_message)
         
+        # Send button
         self.send_button = QPushButton("Send")
         self.send_button.clicked.connect(self.send_message)
+        self.send_button.setToolTip("Click to send message (or press Enter)")
         
         input_layout.addWidget(self.input_field)
         input_layout.addWidget(self.send_button)
@@ -149,12 +157,17 @@ class PetWidget(QWidget):
         """)
         
     def update_pet_display(self):
-        """Update pet emoji display"""
+        """Update pet emoji display based on current personality"""
         emoji = self.personality.traits.default_emoji
         self.pet_display.setText(emoji)
         
     def change_personality(self, mbti_type_str: str):
-        """Change pet personality"""
+        """
+        Change pet personality type
+        
+        Args:
+            mbti_type_str: MBTI type string (e.g., "ENFP", "INTJ")
+        """
         self.personality = MBTIPersonality.from_string(mbti_type_str)
         self.update_pet_display()
         
@@ -162,47 +175,108 @@ class PetWidget(QWidget):
         self.add_message("Pet", f"Personality changed! {greeting}")
         
     def add_message(self, sender: str, message: str):
-        """Add a message to chat display"""
+        """
+        Add a message to the chat display
+        
+        Args:
+            sender: The sender of the message (e.g., "You", "Pet")
+            message: The message content
+        """
         formatted_message = f"<b>{sender}:</b> {message}<br>"
         self.chat_display.append(formatted_message)
         
     def send_message(self):
-        """Handle user message"""
+        """
+        Handle sending user message
+        
+        This method:
+        1. Validates input
+        2. Displays user message
+        3. Disables send button to prevent duplicate sends
+        4. Recognizes intent using the intent system
+        5. Records interaction in memory
+        6. Generates response using MBTI personality
+        7. Displays response
+        8. Re-enables send button
+        9. Handles any errors gracefully
+        """
+        # Get user input
         user_input = self.input_field.text().strip()
         
+        # Validate input - don't send empty messages
         if not user_input:
             return
         
-        # Display user message
-        self.add_message("You", user_input)
-        self.input_field.clear()
+        # Prevent duplicate sends while processing
+        if self.is_sending:
+            return
         
-        # Recognize intent
-        intent = self.intent_system.analyze(user_input=user_input)
-        
-        # Record in memory
-        self.memory.record_interaction(
-            interaction_type="text_input",
-            content=user_input,
-            context={"intent": intent.intent_type.value},
-            importance=7
-        )
-        
-        # Generate response
-        response = self.generate_response(intent)
-        pet_response = self.personality.format_response(response)
-        
-        self.add_message("Pet", pet_response)
-        
-        # Record response in memory
-        self.memory.record_interaction(
-            interaction_type="response",
-            content=response,
-            importance=5
-        )
+        try:
+            # Set sending state
+            self.is_sending = True
+            self.send_button.setEnabled(False)
+            self.send_button.setText("Sending...")
+            self.input_field.setEnabled(False)
+            
+            # Display user message
+            self.add_message("You", user_input)
+            
+            # Clear input field immediately after displaying
+            self.input_field.clear()
+            
+            # Process the message using Qt's event processing
+            QApplication.processEvents()
+            
+            # Recognize intent using the context-aware intent system
+            intent = self.intent_system.analyze(user_input=user_input)
+            
+            # Record user input in memory system
+            self.memory.record_interaction(
+                interaction_type="text_input",
+                content=user_input,
+                context={"intent": intent.intent_type.value},
+                importance=7  # User input is important
+            )
+            
+            # Generate response based on intent and personality
+            response = self.generate_response(intent)
+            pet_response = self.personality.format_response(response)
+            
+            # Display pet response
+            self.add_message("Pet", pet_response)
+            
+            # Record response in memory system
+            self.memory.record_interaction(
+                interaction_type="response",
+                content=response,
+                importance=5
+            )
+            
+        except Exception as e:
+            # Handle any errors gracefully
+            error_message = f"Sorry, I encountered an error: {str(e)}"
+            self.add_message("Pet", self.personality.format_response(error_message))
+            print(f"Error in send_message: {e}")
+            
+        finally:
+            # Always restore UI state
+            self.is_sending = False
+            self.send_button.setEnabled(True)
+            self.send_button.setText("Send")
+            self.input_field.setEnabled(True)
+            # Keep focus on input field for convenience
+            self.input_field.setFocus()
         
     def generate_response(self, intent) -> str:
-        """Generate response based on intent and personality"""
+        """
+        Generate response based on intent and personality
+        
+        Args:
+            intent: The recognized Intent object containing user intent information
+            
+        Returns:
+            str: Generated response string
+        """
         # Use intent's suggested action as base
         base_response = intent.suggested_action or "I'm here to help!"
         
