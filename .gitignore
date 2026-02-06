@@ -43,6 +43,13 @@ logs/
 # Screenshots and captures
 screenshots/
 captures/
+*.png
+*.jpg
+*.jpeg
+
+# Test and demo files
+test_*.py
+demo_*.py
 
 # OS
 .DS_Store
@@ -51,3 +58,11 @@ Thumbs.db
 # Memory database
 *.db
 *.sqlite
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
