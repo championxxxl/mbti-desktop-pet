@@ -21,6 +21,13 @@ class IntentType(Enum):
     WEB_SEARCH = "web_search"
     CODE_ASSISTANCE = "code_assistance"
     WRITING_ASSISTANCE = "writing_assistance"
+    # New intent types for improved recognition
+    SEARCH = "search"              # 搜索请求
+    AUTOMATION = "automation"      # 自动化任务
+    MEMORY = "memory"              # 记忆相关
+    SCREENSHOT = "screenshot"      # 截图请求
+    OPEN_URL = "open_url"          # 打开网址
+    OPEN_FILE = "open_file"        # 打开文件
     UNKNOWN = "unknown"
 
 
@@ -37,44 +44,135 @@ class Intent:
 class IntentRecognizer:
     """Recognizes user intent from text input and context"""
     
-    # Intent patterns
+    # Intent patterns with enhanced recognition rules
+    # Each pattern has a weight: high specificity = higher weight
+    # Note: \b (word boundary) doesn't work with Chinese characters, so Chinese patterns avoid it
     INTENT_PATTERNS = {
         IntentType.HELP_REQUEST: [
-            r'\b(help|assist|support|guide|show me|how to|can you|could you)\b',
-            r'\b(need help|stuck|困难|帮助|协助)\b',
+            (r'\b(help|assist|support|guide)\b', 0.5),
+            (r'\b(show me|how to|can you help|could you help)\b', 0.6),
+            (r'\b(need help|stuck)\b', 0.6),
+            (r'(帮助|协助|支持|指导)', 0.5),
+            (r'(需要帮助|困难|有困难)', 0.6),
+            (r'(teach me|guide me)', 0.5),
+            (r'(帮我|教我)', 0.5),
         ],
         IntentType.TASK_EXECUTION: [
-            r'\b(do|execute|run|perform|start|launch|open)\b',
-            r'\b(完成|执行|运行|启动|打开)\b',
+            (r'\b(execute|perform|carry out)\b.*\b(task|action|job)\b', 0.7),
+            (r'\b(do|run|start|launch)\b', 0.4),
+            (r'(完成|执行|运行|启动)', 0.5),
+            (r'^(please |帮我 )?(do|execute|run)', 0.6),
+            (r'^(完成|执行)', 0.6),
         ],
         IntentType.INFORMATION_QUERY: [
-            r'\b(what|when|where|who|why|how|which)\b',
-            r'\b(tell me|explain|describe|find|search)\b',
-            r'\b(什么|为什么|如何|哪里|告诉我|解释)\b',
+            (r'^(what|when|where|who|why|how|which)\b', 0.6),
+            (r'\b(tell me|explain|describe|define)\b', 0.6),
+            (r'^(什么|为什么|如何|哪里|为何|怎么)', 0.6),
+            (r'(告诉我|解释|说明|定义)', 0.6),
+            (r'(查询|询问|了解|知道)', 0.5),
         ],
         IntentType.AUTOMATION_REQUEST: [
-            r'\b(automate|automatic|schedule|repeat|batch)\b',
-            r'\b(自动|定时|批量|重复)\b',
+            (r'\b(automate|automatic|automatically)\b', 0.7),
+            (r'\b(schedule|repeat|batch|recurring)\b', 0.6),
+            (r'(自动化|自动|定时|批量)', 0.7),
+            (r'(重复|循环|定期)', 0.5),
+            (r'(every|每|每天|每周|daily|weekly)', 0.6),
         ],
         IntentType.FILE_OPERATION: [
-            r'\b(file|folder|directory|save|load|delete|move|copy)\b',
-            r'\b(文件|文件夹|保存|删除|移动|复制)\b',
+            (r'\b(file|folder|directory)\b.*\b(save|load|delete|move|copy|rename)\b', 0.7),
+            (r'\b(create|make|new)\b.*\b(file|folder)\b', 0.7),
+            (r'(文件|文件夹|目录)', 0.5),
+            (r'(保存|删除|移动|复制|重命名|创建)', 0.5),
         ],
         IntentType.WEB_SEARCH: [
-            r'\b(search|google|find online|look up|browse)\b',
-            r'\b(搜索|查找|浏览)\b',
+            (r'\b(google|bing|search engine)\b', 0.7),
+            (r'\b(find online|look up online|search the web)\b', 0.7),
+            (r'\b(browse|surf)\b', 0.4),
+            (r'(在线搜索|网上查找|上网搜)', 0.7),
         ],
         IntentType.CODE_ASSISTANCE: [
-            r'\b(code|program|debug|compile|function|class|variable)\b',
-            r'\b(代码|编程|调试|函数|类)\b',
+            (r'\b(code|program|script)\b.*\b(debug|fix|error|bug)\b', 0.8),
+            (r'\b(function|class|variable|method|algorithm)\b', 0.6),
+            (r'\b(compile|syntax|runtime)\b.*\b(error|issue)\b', 0.7),
+            (r'(代码|程序|脚本)', 0.5),
+            (r'(调试|修复|错误|函数|类|变量)', 0.6),
         ],
         IntentType.WRITING_ASSISTANCE: [
-            r'\b(write|draft|compose|edit|proofread|grammar)\b',
-            r'\b(写作|编辑|语法|校对)\b',
+            (r'\b(write|draft|compose)\b.*\b(document|article|essay|email)\b', 0.7),
+            (r'\b(edit|proofread|review|revise)\b', 0.6),
+            (r'\b(grammar|spelling|punctuation)\b', 0.6),
+            (r'(写作|撰写|编写)', 0.6),
+            (r'(编辑|修改|校对|语法)', 0.6),
         ],
         IntentType.SYSTEM_COMMAND: [
-            r'\b(shutdown|restart|close|quit|exit|minimize)\b',
-            r'\b(关闭|退出|重启|最小化)\b',
+            (r'\b(shutdown|restart|reboot)\b.*\b(computer|system|pc)\b', 0.8),
+            (r'\b(close|quit|exit|kill)\b.*\b(application|app|program)\b', 0.7),
+            (r'\b(minimize|maximize|restore)\b.*\b(window)\b', 0.7),
+            (r'(关闭|退出|结束).*(程序|应用|窗口)', 0.7),
+            (r'(重启|关机|最小化|最大化)', 0.6),
+        ],
+        # New intent types with comprehensive patterns
+        IntentType.SEARCH: [
+            (r'^(search|find|lookup|query)\b', 0.7),
+            (r'\b(search for|find me|lookup)\b', 0.7),
+            (r'^(搜索|查询|搜|找)', 0.8),
+            (r'(搜索|查找|检索).*(教程|资料|信息|内容)', 0.8),
+            (r'(search|搜索|搜|查找).{1,30}(tutorial|guide|info|how to|教程|指南|方法)', 0.8),
+        ],
+        IntentType.AUTOMATION: [
+            (r'^(automate|自动化)', 0.9),
+            (r'(帮我自动|自动执行|自动完成)', 0.9),
+            (r'\b(automate this|make it automatic)\b', 0.8),
+            (r'(自动化.*任务|自动.*处理)', 0.8),
+            (r'(批处理|批量处理|自动运行)', 0.7),
+        ],
+        IntentType.MEMORY: [
+            (r'^(remember|记住|记录)', 0.9),
+            (r'\b(save to memory|store this)\b', 0.8),
+            (r'(记下来|记一下)', 0.8),
+            (r'(记住|记录|保存|储存).*(这个|这件事|此事|信息)', 0.9),
+            (r'\b(memorize|keep in mind)\b', 0.8),
+            (r'(别忘了|不要忘记)', 0.8),
+            (r'\b(recall|retrieve)\b', 0.7),
+            (r'(想起|回忆)', 0.7),
+            (r'\b(do you remember)\b', 0.8),
+            (r'(你记得|还记得)', 0.8),
+        ],
+        IntentType.SCREENSHOT: [
+            (r'^(screenshot|capture|截图|截屏)', 0.95),
+            (r'\b(take a screenshot|capture screen)\b', 0.9),
+            (r'(截图|截屏|抓图|屏幕截图)', 0.95),
+            (r'\b(capture this|save screen)\b', 0.8),
+            (r'(保存屏幕)', 0.8),
+            (r'\b(screen capture|print screen)\b', 0.8),
+        ],
+        IntentType.OPEN_URL: [
+            (r'https?://[^\s]+', 0.95),  # Direct URL
+            (r'\b(open|go to|visit|navigate to)\b.*(http|www\.|\.com|\.org|\.net)', 0.9),
+            (r'(打开|访问|进入|浏览).*(网址|网站|链接)', 0.8),
+            (r'^(打开|open)\s*(www\.|http)', 0.9),
+            (r'(\.com|\.org|\.net|\.cn|\.io)\b', 0.6),
+        ],
+        IntentType.OPEN_FILE: [
+            (r'\b(open|edit|view)\b.*\b(file|document)\b', 0.8),
+            (r'(打开|编辑|查看).*(文件|文档)', 0.8),
+            (r'\b(open|打开)\b.*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)', 0.9),
+            (r'"[^"]*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)"', 0.9),
+            (r"'[^']*\.(py|txt|doc|pdf|jpg|png|xlsx|json|xml|cpp|java|js|html|css)'", 0.9),
+        ],
+        # Enhanced casual chat patterns (should have low specificity)
+        IntentType.CASUAL_CHAT: [
+            (r'^(hi|hello|hey|哈喽)', 0.8),
+            (r'^(你好|嗨)', 0.8),
+            (r"^(how are you|how's it going|what's up)", 0.8),
+            (r'^(你好吗|怎么样)', 0.8),
+            (r'\b(nice|good|great|cool|awesome)\b.*\b(weather|day)\b', 0.7),
+            (r'(不错|很好|棒|好).*天气', 0.7),
+            (r'^(thanks|thank you)', 0.7),
+            (r'^(谢谢|感谢)', 0.7),
+            (r'^(bye|goodbye|see you)', 0.7),
+            (r'^(再见|拜拜)', 0.7),
+            (r'(好的|ok|okay|fine|sure|alright|行|可以)', 0.4),
         ],
     }
     
@@ -88,34 +186,84 @@ class IntentRecognizer:
     }
     
     def __init__(self):
-        self.compiled_patterns = {
-            intent_type: [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
-            for intent_type, patterns in self.INTENT_PATTERNS.items()
-        }
+        # Compile patterns with their weights
+        self.compiled_patterns = {}
+        for intent_type, pattern_list in self.INTENT_PATTERNS.items():
+            compiled_list = []
+            for pattern, weight in pattern_list:
+                compiled_list.append((re.compile(pattern, re.IGNORECASE), weight))
+            self.compiled_patterns[intent_type] = compiled_list
     
     def recognize_intent(self, user_input: str, context: Optional[Dict[str, Any]] = None) -> Intent:
-        """Recognize intent from user input"""
+        """
+        Recognize intent from user input with improved confidence scoring
+        
+        Confidence Calculation:
+        - Base score: Sum of matched pattern weights
+        - Bonus for multiple matches: +0.1 per additional match (up to +0.3)
+        - Length normalization: Longer specific matches get slight bonus
+        - Threshold: 0.4 for non-casual intent types
+        """
         user_input_lower = user_input.lower()
+        user_input_len = len(user_input)
         
         # Calculate confidence scores for each intent
         intent_scores = {}
-        for intent_type, patterns in self.compiled_patterns.items():
-            score = 0.0
-            for pattern in patterns:
-                if pattern.search(user_input_lower):
-                    score += 0.3
-            intent_scores[intent_type] = min(score, 1.0)
+        intent_match_counts = {}
         
-        # Get best matching intent
-        if intent_scores:
-            best_intent = max(intent_scores.items(), key=lambda x: x[1])
-            if best_intent[1] > 0.3:
-                intent_type = best_intent[0]
-                confidence = best_intent[1]
+        for intent_type, pattern_weight_list in self.compiled_patterns.items():
+            score = 0.0
+            match_count = 0
+            
+            for pattern, weight in pattern_weight_list:
+                match = pattern.search(user_input_lower)
+                if match:
+                    # Base weight from pattern
+                    score += weight
+                    match_count += 1
+                    
+                    # Small bonus for longer matches (indicates specificity)
+                    match_len = len(match.group(0))
+                    if match_len > 10:
+                        score += 0.05
+            
+            # Bonus for multiple pattern matches (indicates strong intent)
+            if match_count > 1:
+                bonus = min((match_count - 1) * 0.1, 0.3)
+                score += bonus
+            
+            # Cap score at 1.0
+            intent_scores[intent_type] = min(score, 1.0)
+            intent_match_counts[intent_type] = match_count
+        
+        # Determine best intent
+        # Sort by score, then by match count as tiebreaker
+        sorted_intents = sorted(
+            intent_scores.items(),
+            key=lambda x: (x[1], intent_match_counts.get(x[0], 0)),
+            reverse=True
+        )
+        
+        if sorted_intents:
+            best_intent_type, best_score = sorted_intents[0]
+            
+            # Apply threshold logic
+            # Casual chat has lower threshold (easier to match)
+            # Other intents need higher confidence
+            if best_intent_type == IntentType.CASUAL_CHAT:
+                threshold = 0.3
             else:
+                threshold = 0.4
+            
+            if best_score >= threshold:
+                intent_type = best_intent_type
+                confidence = best_score
+            else:
+                # If no intent meets threshold, default to casual chat
                 intent_type = IntentType.CASUAL_CHAT
                 confidence = 0.5
         else:
+            # No patterns matched at all
             intent_type = IntentType.CASUAL_CHAT
             confidence = 0.5
         
@@ -166,6 +314,13 @@ class IntentRecognizer:
             IntentType.WRITING_ASSISTANCE: "I'll help you with your writing.",
             IntentType.SYSTEM_COMMAND: "I'll execute that system command.",
             IntentType.CASUAL_CHAT: "I'm here to chat! What's on your mind?",
+            # New intent types
+            IntentType.SEARCH: "I'll search for that information right away.",
+            IntentType.AUTOMATION: "I can automate that task for you. Let me set it up.",
+            IntentType.MEMORY: "I'll remember that for you.",
+            IntentType.SCREENSHOT: "Taking a screenshot now...",
+            IntentType.OPEN_URL: "Opening the URL for you...",
+            IntentType.OPEN_FILE: "Opening the file...",
         }
         
         return suggestions.get(intent_type, "How can I help you?")
