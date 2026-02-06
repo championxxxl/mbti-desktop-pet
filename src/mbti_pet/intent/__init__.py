@@ -51,7 +51,7 @@ class IntentRecognizer:
         IntentType.HELP_REQUEST: [
             (r'\b(help|assist|support|guide)\b', 0.5),
             (r'\b(show me|how to|can you help|could you help)\b', 0.6),
-            (r'\b(need help|stuck)\b', 0.6),
+            (r'\b(need help|stuck|need assistance|need support)\b', 0.6),
             (r'(帮助|协助|支持|指导)', 0.5),
             (r'(需要帮助|困难|有困难)', 0.6),
             (r'(teach me|guide me)', 0.5),
@@ -92,6 +92,8 @@ class IntentRecognizer:
         ],
         IntentType.CODE_ASSISTANCE: [
             (r'\b(code|program|script)\b.*\b(debug|fix|error|bug)\b', 0.8),
+            (r'\b(debug|fix)\b.*\b(code|program|script|function|error|bug)\b', 0.8),
+            (r'^(debug|fix)\b', 0.6),  # Start with debug/fix
             (r'\b(function|class|variable|method|algorithm)\b', 0.6),
             (r'\b(compile|syntax|runtime)\b.*\b(error|issue)\b', 0.7),
             (r'(代码|程序|脚本)', 0.5),
