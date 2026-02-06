@@ -43,6 +43,13 @@ logs/
 # Screenshots and captures
 screenshots/
 captures/
+*.png
+*.jpg
+*.jpeg
+
+# Test and demo files
+test_*.py
+demo_*.py
 
 # OS
 .DS_Store

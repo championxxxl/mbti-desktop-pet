@@ -4,11 +4,53 @@ Provides automated operations similar to Claude Desktop
 """
 
 import time
-import pyautogui
+import os
+import logging
 from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
 import platform
+
+# Set up logger
+logger = logging.getLogger(__name__)
+
+# Try to import pyautogui, but make it optional
+# This allows the module to be imported even in headless environments
+try:
+    import pyautogui
+    PYAUTOGUI_AVAILABLE = True
+except (ImportError, KeyError) as e:
+    # KeyError can occur when DISPLAY is not set
+    PYAUTOGUI_AVAILABLE = False
+    logger.warning(f"pyautogui not available: {e}")
+    
+    # Create a mock pyautogui for testing
+    class MockPyAutoGUI:
+        @staticmethod
+        def screenshot(*args, **kwargs):
+            return None
+        
+        @staticmethod
+        def click(*args, **kwargs):
+            pass
+        
+        @staticmethod
+        def typewrite(*args, **kwargs):
+            pass
+        
+        @staticmethod
+        def press(*args, **kwargs):
+            pass
+        
+        @staticmethod
+        def moveTo(*args, **kwargs):
+            pass
+        
+        @staticmethod
+        def scroll(*args, **kwargs):
+            pass
+    
+    pyautogui = MockPyAutoGUI()
 
 
 class AutomationAction(Enum):
