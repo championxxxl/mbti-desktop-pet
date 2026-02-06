@@ -5,18 +5,96 @@ PyQt5-based interface for the desktop pet
 
 import sys
 from typing import Optional
+from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QTextEdit, QLineEdit, QPushButton, QLabel, QComboBox,
-    QSystemTrayIcon, QMenu, QAction
+    QSystemTrayIcon, QMenu, QAction, QListWidget, QListWidgetItem,
+    QScrollArea
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
+from PyQt5.QtGui import QIcon, QFont, QTextCursor
 
 from mbti_pet.personality import MBTIPersonality, MBTIType
 from mbti_pet.intent import ContextAwareIntentSystem
 from mbti_pet.memory import MemoryManager
 from mbti_pet.automation import AutomationAssistant
+
+
+class MessageWidget(QWidget):
+    """Custom widget for displaying a single chat message"""
+    
+    def __init__(self, sender: str, message: str, timestamp: str, is_user: bool = False):
+        super().__init__()
+        self.sender = sender
+        self.message = message
+        self.timestamp = timestamp
+        self.is_user = is_user
+        self.init_ui()
+    
+    def init_ui(self):
+        """Initialize the message widget UI"""
+        layout = QHBoxLayout()
+        layout.setContentsMargins(10, 5, 10, 5)
+        
+        # Create message container
+        message_container = QWidget()
+        message_layout = QVBoxLayout()
+        message_layout.setContentsMargins(12, 8, 12, 8)
+        message_layout.setSpacing(4)
+        
+        # Sender and timestamp row
+        header_layout = QHBoxLayout()
+        sender_label = QLabel(self.sender)
+        sender_label.setFont(QFont("Arial", 10, QFont.Bold))
+        
+        time_label = QLabel(self.timestamp)
+        time_label.setFont(QFont("Arial", 9))
+        time_label.setStyleSheet("color: #666;")
+        
+        header_layout.addWidget(sender_label)
+        header_layout.addWidget(time_label)
+        header_layout.addStretch()
+        
+        # Message content
+        message_label = QLabel(self.message)
+        message_label.setWordWrap(True)
+        message_label.setFont(QFont("Arial", 11))
+        message_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        
+        message_layout.addLayout(header_layout)
+        message_layout.addWidget(message_label)
+        
+        message_container.setLayout(message_layout)
+        
+        # Style based on sender
+        if self.is_user:
+            # User message - right aligned with blue background
+            message_container.setStyleSheet("""
+                QWidget {
+                    background-color: #DCF8C6;
+                    border-radius: 10px;
+                    max-width: 400px;
+                }
+            """)
+            sender_label.setStyleSheet("color: #075E54;")
+            layout.addStretch()
+            layout.addWidget(message_container)
+        else:
+            # Pet message - left aligned with gray background
+            message_container.setStyleSheet("""
+                QWidget {
+                    background-color: #FFFFFF;
+                    border: 1px solid #E0E0E0;
+                    border-radius: 10px;
+                    max-width: 400px;
+                }
+            """)
+            sender_label.setStyleSheet("color: #128C7E;")
+            layout.addWidget(message_container)
+            layout.addStretch()
+        
+        self.setLayout(layout)
 
 
 class PetWidget(QWidget):
@@ -64,14 +142,33 @@ class PetWidget(QWidget):
         self.pet_display.setStyleSheet("padding: 20px;")
         self.update_pet_display()
         
-        # Chat display
-        self.chat_display = QTextEdit()
-        self.chat_display.setReadOnly(True)
+        # Chat display - using QListWidget for better message management
+        self.chat_display = QListWidget()
+        self.chat_display.setVerticalScrollMode(QListWidget.ScrollPerPixel)
+        self.chat_display.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.chat_display.setMinimumHeight(300)
+        self.chat_display.setStyleSheet("""
+            QListWidget {
+                background-color: #F0F0F0;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+            QListWidget::item {
+                background-color: transparent;
+                border: none;
+                padding: 0px;
+            }
+            QListWidget::item:selected {
+                background-color: transparent;
+            }
+        """)
+        
+        # Load message history from memory
+        self.load_message_history()
         
         # Add greeting message
         greeting = self.personality.get_greeting()
-        self.add_message("Pet", greeting)
+        self.add_message("Pet", greeting, is_user=False)
         
         # Input area
         input_layout = QHBoxLayout()
@@ -159,12 +256,48 @@ class PetWidget(QWidget):
         self.update_pet_display()
         
         greeting = self.personality.get_greeting()
-        self.add_message("Pet", f"Personality changed! {greeting}")
+        self.add_message("Pet", f"Personality changed! {greeting}", is_user=False)
         
-    def add_message(self, sender: str, message: str):
-        """Add a message to chat display"""
-        formatted_message = f"<b>{sender}:</b> {message}<br>"
-        self.chat_display.append(formatted_message)
+    def add_message(self, sender: str, message: str, is_user: bool = False, timestamp: Optional[str] = None):
+        """Add a message to chat display with timestamp and proper styling"""
+        # Generate timestamp if not provided
+        if timestamp is None:
+            timestamp = datetime.now().strftime("%H:%M")
+        
+        # Create message widget
+        message_widget = MessageWidget(sender, message, timestamp, is_user)
+        
+        # Create list item
+        item = QListWidgetItem(self.chat_display)
+        item.setSizeHint(message_widget.sizeHint())
+        
+        # Add to list
+        self.chat_display.addItem(item)
+        self.chat_display.setItemWidget(item, message_widget)
+        
+        # Auto-scroll to bottom
+        self.chat_display.scrollToBottom()
+    
+    def load_message_history(self):
+        """Load recent message history from memory system"""
+        try:
+            # Get recent conversation history from memory
+            recent_memories = self.memory.db.get_recent_memories(limit=20)
+            
+            # Display historical messages
+            for memory in reversed(recent_memories):  # Reverse to show oldest first
+                if memory.interaction_type == "text_input":
+                    # User message
+                    timestamp = datetime.fromisoformat(memory.timestamp).strftime("%H:%M")
+                    self.add_message("You", memory.content, is_user=True, timestamp=timestamp)
+                elif memory.interaction_type == "response":
+                    # Pet response
+                    timestamp = datetime.fromisoformat(memory.timestamp).strftime("%H:%M")
+                    formatted_response = self.personality.format_response(memory.content)
+                    self.add_message("Pet", formatted_response, is_user=False, timestamp=timestamp)
+        except Exception as e:
+            # If loading history fails, just continue without history
+            print(f"Could not load message history: {e}")
         
     def send_message(self):
         """Handle user message"""
@@ -174,7 +307,7 @@ class PetWidget(QWidget):
             return
         
         # Display user message
-        self.add_message("You", user_input)
+        self.add_message("You", user_input, is_user=True)
         self.input_field.clear()
         
         # Recognize intent
@@ -192,7 +325,7 @@ class PetWidget(QWidget):
         response = self.generate_response(intent)
         pet_response = self.personality.format_response(response)
         
-        self.add_message("Pet", pet_response)
+        self.add_message("Pet", pet_response, is_user=False)
         
         # Record response in memory
         self.memory.record_interaction(
@@ -225,12 +358,12 @@ class PetWidget(QWidget):
         else:
             message = "Failed to take screenshot. 😔"
         
-        self.add_message("Pet", self.personality.format_response(message))
+        self.add_message("Pet", self.personality.format_response(message), is_user=False)
         
     def show_memory(self):
         """Show memory summary"""
         summary = self.memory.get_summary()
-        self.add_message("Pet", self.personality.format_response(f"Memory Summary:\n{summary}"))
+        self.add_message("Pet", self.personality.format_response(f"Memory Summary:\n{summary}"), is_user=False)
         
     def show_automation(self):
         """Show automation options"""
@@ -238,7 +371,7 @@ class PetWidget(QWidget):
         task_list = "\n".join([f"- {task}" for task in tasks])
         
         message = f"Available automations:\n{task_list}"
-        self.add_message("Pet", self.personality.format_response(message))
+        self.add_message("Pet", self.personality.format_response(message), is_user=False)
 
 
 class DesktopPetApp:
