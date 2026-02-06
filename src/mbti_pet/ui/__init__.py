@@ -4,6 +4,7 @@ PyQt5-based interface for the desktop pet
 """
 
 import sys
+import logging
 from typing import Optional
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
@@ -17,6 +18,9 @@ from mbti_pet.personality import MBTIPersonality, MBTIType
 from mbti_pet.intent import ContextAwareIntentSystem
 from mbti_pet.memory import MemoryManager
 from mbti_pet.automation import AutomationAssistant
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class PetWidget(QWidget):
@@ -250,10 +254,12 @@ class PetWidget(QWidget):
             )
             
         except Exception as e:
-            # Handle any errors gracefully
-            error_message = f"Sorry, I encountered an error: {str(e)}"
+            # Log the full exception for debugging
+            logger.error(f"Error in send_message: {e}", exc_info=True)
+            
+            # Show user-friendly error message
+            error_message = "Sorry, something went wrong. Please try again."
             self.add_message("Pet", self.personality.format_response(error_message))
-            print(f"Error in send_message: {e}")
             
         finally:
             # Always restore UI state
