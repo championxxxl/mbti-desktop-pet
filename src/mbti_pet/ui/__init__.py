@@ -528,17 +528,6 @@ class PetWidget(QWidget):
         except Exception as e:
             # If loading history fails, just continue without history
             print(f"Could not load message history: {e}")
-    def add_message(self, sender: str, message: str):
-        """
-        Add a message to the chat display
-        
-        Args:
-            sender: The sender of the message (e.g., "You", "Pet")
-            message: The message content
-        """
-        formatted_message = f"<b>{sender}:</b> {message}<br>"
-        self.chat_display.append(formatted_message)
-        
     def send_message(self):
         """
         Handle sending user message

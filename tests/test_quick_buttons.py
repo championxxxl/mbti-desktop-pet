@@ -85,7 +85,7 @@ def test_ui_module_syntax():
 
 def test_ui_classes_defined():
     """Test that UI classes are properly defined"""
-    with open(src_path / "mbti_pet" / "ui" / "__init__.py", 'r') as f:
+    with open(src_path / "mbti_pet" / "ui" / "__init__.py", "r", encoding="utf-8") as f:
         content = f.read()
     
     # Check for required classes
@@ -110,7 +110,7 @@ def test_ui_classes_defined():
 
 def test_button_icons():
     """Test that buttons have proper emoji icons"""
-    with open(src_path / "mbti_pet" / "ui" / "__init__.py", 'r') as f:
+    with open(src_path / "mbti_pet" / "ui" / "__init__.py", "r", encoding="utf-8") as f:
         content = f.read()
     
     assert "📸" in content, "Screenshot emoji not found"
@@ -123,7 +123,7 @@ def test_button_icons():
 
 def test_dialog_features():
     """Test that dialogs have required features"""
-    with open(src_path / "mbti_pet" / "ui" / "__init__.py", 'r') as f:
+    with open(src_path / "mbti_pet" / "ui" / "__init__.py", "r", encoding="utf-8") as f:
         content = f.read()
     
     # MemoryDialog features
