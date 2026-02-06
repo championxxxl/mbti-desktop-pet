@@ -59,8 +59,8 @@ class IntentRecognizer:
         ],
         IntentType.TASK_EXECUTION: [
             (r'\b(execute|perform|carry out)\b.*\b(task|action|job)\b', 0.7),
-            (r'\b(do|run|start|launch|open)\b', 0.4),
-            (r'\b(open|close).*\b(browser|application|app|program|window)\b', 0.7),  # "Open my browser"
+            (r'\b(do|run|start|launch)\b', 0.4),  # Removed 'open' to avoid conflict with line below
+            (r'\b(open|close).*\b(browser|application|app|program|window)\b', 0.7),  # Specific pattern for opening/closing apps
             (r'(完成|执行|运行|启动|打开)', 0.5),
             (r'^(please |帮我 )?(do|execute|run)', 0.6),
             (r'^(完成|执行)', 0.6),
