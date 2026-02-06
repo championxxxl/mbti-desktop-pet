@@ -5,10 +5,14 @@ Provides automated operations similar to Claude Desktop
 
 import time
 import os
+import logging
 from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
 import platform
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 # Try to import pyautogui, but make it optional
 # This allows the module to be imported even in headless environments
@@ -18,7 +22,7 @@ try:
 except (ImportError, KeyError) as e:
     # KeyError can occur when DISPLAY is not set
     PYAUTOGUI_AVAILABLE = False
-    print(f"Warning: pyautogui not available: {e}")
+    logger.warning(f"pyautogui not available: {e}")
     
     # Create a mock pyautogui for testing
     class MockPyAutoGUI:

@@ -69,7 +69,7 @@ class MessageWidget(QWidget):
         
         # Style based on sender
         if self.is_user:
-            # User message - right aligned with blue background
+            # User message - right aligned with green background
             message_container.setStyleSheet("""
                 QWidget {
                     background-color: #DCF8C6;
@@ -81,7 +81,7 @@ class MessageWidget(QWidget):
             layout.addStretch()
             layout.addWidget(message_container)
         else:
-            # Pet message - left aligned with gray background
+            # Pet message - left aligned with white background
             message_container.setStyleSheet("""
                 QWidget {
                     background-color: #FFFFFF;
@@ -99,6 +99,9 @@ class MessageWidget(QWidget):
 
 class PetWidget(QWidget):
     """Main desktop pet window"""
+    
+    # Configuration constants
+    MESSAGE_HISTORY_LIMIT = 20  # Maximum number of historical messages to load
     
     def __init__(self):
         super().__init__()
@@ -282,7 +285,7 @@ class PetWidget(QWidget):
         """Load recent message history from memory system"""
         try:
             # Get recent conversation history from memory
-            recent_memories = self.memory.db.get_recent_memories(limit=20)
+            recent_memories = self.memory.db.get_recent_memories(limit=self.MESSAGE_HISTORY_LIMIT)
             
             # Display historical messages
             for memory in reversed(recent_memories):  # Reverse to show oldest first
