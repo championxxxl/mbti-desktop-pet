@@ -58,3 +58,11 @@ Thumbs.db
 # Memory database
 *.db
 *.sqlite
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
